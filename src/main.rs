@@ -1,13 +1,14 @@
 use std::io;
-use std::net::TcpListener;
 
-use oxidisedb::serve_once;
+use tokio::net::TcpListener;
+use tracing::info;
+use tracing_subscriber;
 
-fn main() -> io::Result<()> {
-    let listener = TcpListener::bind(("127.0.0.1", 6349))?;
-    println!("Listening on {}", listener.local_addr()?);
-
-    loop {
-        serve_once(&listener)?;
-    }
+#[tokio::main]
+async fn main() -> io::Result<()> {
+    tracing_subscriber::fmt::init();
+    let listener = TcpListener::bind(("127.0.0.1", 6379)).await.unwrap();
+    let local_addr = listener.local_addr().unwrap();
+    info!("Listening for connections at: {:?}", local_addr);
+    oxidisedb::run_server(listener).await
 }
